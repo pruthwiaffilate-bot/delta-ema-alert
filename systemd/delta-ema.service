@@ -1,0 +1,15 @@
+[Unit]
+Description=Delta EMA Alert Bot
+After=network.target
+
+[Service]
+Type=simple
+User=%u
+WorkingDirectory=/workspaces/delta-ema-alert
+EnvironmentFile=/workspaces/delta-ema-alert/.env
+ExecStart=/workspaces/delta-ema-alert/.venv/bin/python /workspaces/delta-ema-alert/main.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
