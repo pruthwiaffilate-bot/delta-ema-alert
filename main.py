@@ -1,6 +1,7 @@
 """Entry point for delta-ema-alert bot."""
 from __future__ import annotations
 
+import os
 import sys
 import traceback
 from config import load_config
@@ -17,7 +18,8 @@ def main() -> int:
         # store some metadata
         state.set("symbols", config.symbols)
         sched = Scheduler(config, state)
-        sched.start()
+        run_once = os.getenv("RUN_ONCE", "0") == "1"
+        sched.start(run_once=run_once)
         return 0
     except Exception as exc:
         logger.exception("Unhandled error in main: %s", exc)

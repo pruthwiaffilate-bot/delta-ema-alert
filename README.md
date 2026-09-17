@@ -16,6 +16,29 @@ Files
 
 See `.env.example` for configuration variables.
 
+## Run with GitHub Actions
+
+GitHub Actions can run one check per scheduled workflow run. This repository includes [`.github/workflows/hourly-alert.yml`](.github/workflows/hourly-alert.yml), which runs at minute 30 from 06:30 through 23:30 **UTC** and can also be started manually.
+
+### 1. Add repository secrets
+
+In GitHub, open the repository and go to **Settings > Secrets and variables > Actions > New repository secret**. Add:
+
+- `TELEGRAM_TOKEN`: your Telegram bot token
+- `CHAT_ID`: your Telegram chat ID
+
+Do not put these values directly in the workflow or commit them to the repository.
+
+### 2. Adjust the schedule if needed
+
+GitHub Actions cron uses UTC. To run at 06:30 in another timezone, convert that time to UTC and edit the cron expression in [`.github/workflows/hourly-alert.yml`](.github/workflows/hourly-alert.yml). Scheduled workflows can occasionally start a few minutes late.
+
+### 3. Run it manually
+
+Open the repository's **Actions** tab, select **Hourly EMA alert**, choose **Run workflow**, and confirm. The workflow performs one check and exits.
+
+The workflow commits `state.json` after each run so the bot remembers the last candle and signal. The workflow requires repository **Contents: write** permission, which is configured in the workflow file. GitHub Actions is not a continuously running process; this one-check workflow is the correct mode for scheduled runs.
+
 ## Run hourly from 06:30 with cron
 
 GitHub stores the code, but it does not keep this long-running bot process alive. Use an always-on Linux VPS or server. The following setup does not use systemd.
