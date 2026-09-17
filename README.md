@@ -16,11 +16,49 @@ Files
 
 See `.env.example` for configuration variables.
 
-## Run hourly from 06:30
+## Run hourly from 06:30 with cron
 
-GitHub stores the code, but it does not keep this long-running bot process alive. Clone the repository onto a Linux VPS or other always-on server, then install and configure it there.
+GitHub stores the code, but it does not keep this long-running bot process alive. Use an always-on Linux VPS or server. The following setup does not use systemd.
 
-Create `/workspaces/delta-ema-alert/.env` with your credentials:
+### 1. Connect to the server
+
+```bash
+ssh YOUR_USER@YOUR_SERVER_IP
+```
+
+### 2. Clone the GitHub repository
+
+```bash
+cd ~
+git clone https://github.com/pruthwiaffilate-bot/delta-ema-alert.git
+cd delta-ema-alert
+```
+
+For later code updates, run:
+
+```bash
+cd ~/delta-ema-alert
+git pull origin main
+```
+
+### 3. Install Python and project dependencies
+
+```bash
+sudo apt update
+sudo apt install -y git python3 python3-venv
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+mkdir -p logs
+printf '{}\n' > state.json
+```
+
+### 4. Create the environment file
+
+```bash
+nano .env
+```
+
+Paste the following and replace the two credential values:
 
 ```env
 TELEGRAM_TOKEN=your_telegram_bot_token
@@ -30,25 +68,47 @@ TIMEFRAME=1h
 SYMBOLS=ETHUSDT,BTCUSDT,SOLUSDT,XRPUSDT
 ```
 
-Install dependencies:
+In `nano`, save with `Ctrl+O`, press Enter, then exit with `Ctrl+X`.
+
+### 5. Check the server timezone
+
+Cron uses the server's local timezone. The schedule below means 06:30 in this timezone.
 
 ```bash
-cd /workspaces/delta-ema-alert
-./install.sh
+date
+timedatectl
 ```
 
-To run without systemd, disable the installed service and add a cron job:
+### 6. Add the daily 06:30 cron job
 
 ```bash
-sudo systemctl disable --now delta-ema.service
 crontab -e
 ```
 
 Add this line:
 
 ```cron
-30 6 * * * /usr/bin/flock -n /tmp/delta-ema.lock -c 'cd /workspaces/delta-ema-alert && /workspaces/delta-ema-alert/.venv/bin/python main.py >> /workspaces/delta-ema-alert/logs/cron.log 2>&1'
+30 6 * * * /usr/bin/flock -n /tmp/delta-ema.lock -c 'cd "$HOME/delta-ema-alert" && "$HOME/delta-ema-alert/.venv/bin/python" main.py >> "$HOME/delta-ema-alert/logs/cron.log" 2>&1'
 ```
 
-The process starts every day at 06:30, performs a check immediately, then checks once every hour. `flock` prevents a second copy from starting if the previous process is still running. Cron uses the server's local timezone; check it with `date`.
+This starts the bot at 06:30, performs a check immediately, and then checks once every hour. `flock` prevents duplicate bot processes.
+
+### 7. Verify the cron job
+
+```bash
+crontab -l
+```
+
+To start it manually for a test:
+
+```bash
+cd ~/delta-ema-alert
+flock -n /tmp/delta-ema.lock .venv/bin/python main.py
+```
+
+Stop the manual test with `Ctrl+C`. After the scheduled run, view logs with:
+
+```bash
+tail -f ~/delta-ema-alert/logs/cron.log
+```
 # delta-ema-alert
