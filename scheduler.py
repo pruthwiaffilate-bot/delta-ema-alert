@@ -22,6 +22,7 @@ class Scheduler:
         self.telegram = TelegramBot(config.telegram_token, config.chat_id, state)
 
     def start(self) -> None:
+        self.check_all()
         schedule.every(self.config.check_interval).seconds.do(self.check_all)
         LOG.info("Scheduler started: checking every %s seconds", self.config.check_interval)
         while True:

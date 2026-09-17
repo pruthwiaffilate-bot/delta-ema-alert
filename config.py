@@ -32,7 +32,7 @@ def load_config(env_path: str | None = None) -> Config:
     if not telegram_token or not chat_id:
         raise ValueError("Missing TELEGRAM_TOKEN or CHAT_ID in environment")
 
-    check_interval = int(os.getenv("CHECK_INTERVAL", "60"))
+    check_interval = int(os.getenv("CHECK_INTERVAL", "3600"))
     timeframe = os.getenv("TIMEFRAME", "1h")
     symbols_raw = os.getenv("SYMBOLS", "ETHUSDT,BTCUSDT,SOLUSDT,XRPUSDT")
     symbols = [s.strip().upper() for s in symbols_raw.split(",") if s.strip()]
